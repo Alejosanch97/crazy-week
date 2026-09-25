@@ -20,13 +20,13 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyBGgwudAMUBWj4beridtqk
 const CACHE_KEY = "dia_universitario_2026_v1";
 const REFRESCO_MS = 30000; // trae inscripciones de otros equipos cada 30 s
 
-const HORAS = ["7:00 – 8:30", "8:40 – 10:10", "10:40 – 12:10", "1:00 – 2:30"];
 const COLORES = ["#FF5D8F", "#22B892", "#4DA8FF", "#F5A516", "#9B6CFF", "#FF7B4A", "#13A9B8", "#D9559A"];
 
 const NIVELES = {
   PRIMARIA: {
     titulo: "Primaria",
     emoji: "🎒",
+    horas: ["7:00 – 8:45", "9:30 – 11:00", "11:00 – 1:15", "1:15 – 2:45"],
     cursos: [
       { id: "FIRST GRADE", label: "Primero", corto: "1°" },
       { id: "SECOND GRADE", label: "Segundo", corto: "2°" },
@@ -38,6 +38,7 @@ const NIVELES = {
   BACHILLERATO: {
     titulo: "Bachillerato",
     emoji: "🎓",
+    horas: ["7:00 – 8:45", "8:45 – 11:00", "11:00 – 12:30", "1:15 – 2:50"],
     cursos: [
       { id: "SIXTH GRADE", label: "Sexto", corto: "6°" },
       { id: "SEVENTH GRADE", label: "Séptimo", corto: "7°" },
@@ -426,7 +427,7 @@ export const Home = () => {
 
         <section className="du-hero">
           <p className="du-hero-date">Lunes 28 de septiembre</p>
-          <h1 className="du-hero-title">Día Universitario</h1>
+          <h1 className="du-hero-title">Crear University Day</h1>
           <p className="du-hero-sub">Elige el nivel para empezar las inscripciones.</p>
         </section>
 
@@ -505,6 +506,7 @@ export const Home = () => {
               <HorarioCard
                 key={h.id_horario}
                 horario={h}
+                horas={NIVELES[nivel].horas}
                 color={COLORES[i % COLORES.length]}
                 libres={libresHorario(h.id_horario)}
                 total={totalHorario(h.id_horario)}
@@ -625,6 +627,7 @@ export const Home = () => {
                 <HorarioCard
                   key={h.id_horario}
                   horario={h}
+                  horas={NIVELES[nivel].horas}
                   color={COLORES[i % COLORES.length]}
                   libres={quedan}
                   total={cupoDe(h.id_horario, curso)}
@@ -643,7 +646,7 @@ export const Home = () => {
 
 /* ───────────────────────── Piezas ───────────────────────── */
 
-const HorarioCard = ({ horario, color, libres, total, asientos = false, onPick }) => {
+const HorarioCard = ({ horario, color, libres, total, horas = [], asientos = false, onPick }) => {
   const lleno = libres <= 0;
   const Tag = onPick ? "button" : "div";
 
@@ -674,12 +677,13 @@ const HorarioCard = ({ horario, color, libres, total, asientos = false, onPick }
           const c = parseClase(b);
           return (
             <li key={i}>
-              <span className="du-block-time">{HORAS[i]}</span>
+              <span className="du-block-time">{horas[i] || ""}</span>
               <span className="du-block-emoji" aria-hidden="true">
                 {c.emoji}
               </span>
               <span className="du-block-info">
                 <strong>{c.nombre}</strong>
+                {c.docente && <small className="du-block-teacher">{c.docente}</small>}
                 <small>{c.salon}</small>
               </span>
             </li>
