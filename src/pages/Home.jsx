@@ -11,6 +11,9 @@ import {
   X,
   ClipboardList,
   PartyPopper,
+  Users,
+  Copy,
+  BookOpen,
 } from "lucide-react";
 import "../styles/diaUniversitario.css";
 
@@ -19,6 +22,7 @@ import "../styles/diaUniversitario.css";
 const API_URL = "https://script.google.com/macros/s/AKfycbyBGgwudAMUBWj4beridtqkWjPNfJvvEyEyFkF62pyTOCFPFeRPG309S-vMlnV2LDo6Ow/exec";
 const CACHE_KEY = "dia_universitario_2026_v1";
 const REFRESCO_MS = 30000; // trae inscripciones de otros equipos cada 30 s
+const INSCRIPCIONES_CERRADAS = true; // true = nadie puede inscribir ni devolver
 
 const COLORES = ["#FF5D8F", "#22B892", "#4DA8FF", "#F5A516", "#9B6CFF", "#FF7B4A", "#13A9B8", "#D9559A"];
 
@@ -161,6 +165,8 @@ export const Home = () => {
   const [nivel, setNivel] = useState(null);
   const [curso, setCurso] = useState(null);
   const [verResumen, setVerResumen] = useState(false);
+  const [verPorHorario, setVerPorHorario] = useState(false);
+  const [verPorMateria, setVerPorMateria] = useState(false);
   const [aviso, setAviso] = useState(null); // { texto, tipo, color }
 
   const colaRef = useRef(cache?.cola ?? []);
@@ -362,6 +368,10 @@ export const Home = () => {
   };
 
   const inscribir = (est, horario) => {
+    if (INSCRIPCIONES_CERRADAS) {
+      mostrarAviso("Las inscripciones están cerradas", "error");
+      return;
+    }
     if (libres(horario.id_horario, est.course) <= 0) {
       mostrarAviso(`${horario.nombre} ya no tiene cupos para este curso`, "error");
       return;
@@ -378,6 +388,10 @@ export const Home = () => {
   };
 
   const deshacer = (est) => {
+    if (INSCRIPCIONES_CERRADAS) {
+      mostrarAviso("Las inscripciones están cerradas", "error");
+      return;
+    }
     setInscritos((prev) => {
       const next = { ...prev };
       delete next[est.id];
@@ -428,7 +442,11 @@ export const Home = () => {
         <section className="du-hero">
           <p className="du-hero-date">Lunes 28 de septiembre</p>
           <h1 className="du-hero-title">Crear University Day</h1>
-          <p className="du-hero-sub">Elige el nivel para empezar las inscripciones.</p>
+          <p className="du-hero-sub">
+            {INSCRIPCIONES_CERRADAS
+              ? "🔒 Inscripciones cerradas. Puedes consultar las listas por horario o por materia."
+              : "Elige el nivel para empezar las inscripciones."}
+          </p>
         </section>
 
         <div className="du-levels">
@@ -449,6 +467,33 @@ export const Home = () => {
             );
           })}
         </div>
+
+        <div className="du-home-actions">
+          <button className="du-btn du-btn--primary du-btn--big" onClick={() => setVerPorHorario(true)}>
+            <Users size={20} /> Ver inscritos por horario
+          </button>
+          <button className="du-btn du-btn--primary du-btn--big" onClick={() => setVerPorMateria(true)}>
+            <BookOpen size={20} /> Ver inscritos por materia
+          </button>
+        </div>
+
+        {verPorMateria && (
+          <PorMateria
+            datos={datos}
+            inscritos={inscritos}
+            onClose={() => setVerPorMateria(false)}
+            onCopiado={() => mostrarAviso("Lista copiada. Pégala en Excel o Sheets", "ok")}
+          />
+        )}
+
+        {verPorHorario && (
+          <PorHorario
+            datos={datos}
+            inscritos={inscritos}
+            onClose={() => setVerPorHorario(false)}
+            onCopiado={() => mostrarAviso("Lista copiada. Pégala en Excel o Sheets", "ok")}
+          />
+        )}
         <Aviso aviso={aviso} />
       </div>
     );
@@ -542,7 +587,7 @@ export const Home = () => {
         </button>
         <div className="du-top-actions">
           {barraSync}
-          <button className="du-icon-btn" onClick={volverASortear} aria-label="Sortear de nuevo" disabled={!turno.length}>
+          <button className="du-icon-btn" onClick={volverASortear} aria-label="Sortear de nuevo" disabled={!turno.length || INSCRIPCIONES_CERRADAS}>
             <Shuffle size={20} />
           </button>
         </div>
@@ -568,8 +613,7 @@ export const Home = () => {
                 </span>
               </div>
               <div className="du-carnet-foot">
-                <button className="du-btn du-btn--ghost" onClick={saltar} disabled={turno.length < 2}>
-                  <SkipForward size={18} /> Pasa al final
+                <button className="du-btn du-btn--ghost" onClick={saltar} disabled={turno.length < 2 || INSCRIPCIONES_CERRADAS}>                 <SkipForward size={18} /> Pasa al final
                 </button>
               </div>
             </div>
@@ -605,9 +649,11 @@ export const Home = () => {
                       ) : (
                         <CheckCircle2 size={15} className="du-ok" aria-label="Guardado" />
                       )}
-                      <button className="du-undo" onClick={() => deshacer(e)} aria-label={`Quitar a ${e.nombre}`}>
-                        <Undo2 size={15} />
-                      </button>
+                      {!INSCRIPCIONES_CERRADAS && (
+                        <button className="du-undo" onClick={() => deshacer(e)} aria-label={`Quitar a ${e.nombre}`}>
+                          <Undo2 size={15} />
+                        </button>
+                      )}
                     </li>
                   );
                 })}
@@ -632,7 +678,7 @@ export const Home = () => {
                   libres={quedan}
                   total={cupoDe(h.id_horario, curso)}
                   asientos
-                  onPick={actual && quedan > 0 ? () => inscribir(actual, h) : undefined}
+                  onPick={actual && quedan > 0 && !INSCRIPCIONES_CERRADAS ? () => inscribir(actual, h) : undefined}
                 />
               );
             })}
@@ -770,6 +816,291 @@ const Resumen = ({ titulo, horarios, inscritos, estudiantes, cursos, onClose }) 
               </section>
             );
           })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PorHorario = ({ datos, inscritos, onClose, onCopiado }) => {
+  const [nivelSel, setNivelSel] = useState("PRIMARIA");
+  const [idSel, setIdSel] = useState(null);
+
+  const horarios = (datos?.horarios || []).filter((h) => h.nivel === nivelSel);
+  const activo = horarios.find((h) => h.id_horario === idSel) || horarios[0];
+  const idxActivo = Math.max(0, horarios.indexOf(activo));
+  const color = COLORES[idxActivo % COLORES.length];
+  const cursos = NIVELES[nivelSel].cursos;
+
+  const estudiantesNivel = (datos?.estudiantes || []).filter((e) => e.nivel === nivelSel);
+  const deHorario = (idH) => estudiantesNivel.filter((e) => inscritos[e.id]?.id_horario === idH);
+
+  const lista = activo ? deHorario(activo.id_horario) : [];
+  const grupos = cursos
+    .map((c) => ({
+      curso: c,
+      estudiantes: lista
+        .filter((e) => e.course === c.id)
+        .sort((a, b) => a.apellido.localeCompare(b.apellido) || a.nombre.localeCompare(b.nombre)),
+    }))
+    .filter((g) => g.estudiantes.length);
+
+  const cambiarNivel = (clave) => {
+    setNivelSel(clave);
+    setIdSel(null);
+  };
+
+  const copiar = async () => {
+    let n = 0;
+    const filas = [
+      `${activo?.nombre} – ${NIVELES[nivelSel].titulo}`,
+      "N°\tCurso\tApellidos\tNombres",
+      ...grupos.flatMap((g) =>
+        g.estudiantes.map((e) => `${++n}\t${g.curso.label}\t${e.apellido}\t${e.nombre}`)
+      ),
+    ];
+    try {
+      await navigator.clipboard.writeText(filas.join("\n"));
+      onCopiado?.();
+    } catch {
+      window.prompt("Copia la lista:", filas.join("\n"));
+    }
+  };
+
+  let contador = 0;
+
+  return (
+    <div className="du-overlay" onClick={onClose}>
+      <div className="du-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Inscritos por horario">
+        <div className="du-modal-head">
+          <h2>Inscritos por horario</h2>
+          <button className="du-icon-btn" onClick={onClose} aria-label="Cerrar">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="du-modal-body du-modal-body--list">
+          <div className="du-tabs">
+            {Object.entries(NIVELES).map(([clave, n]) => (
+              <button
+                key={clave}
+                className={`du-tab ${nivelSel === clave ? "du-tab--on" : ""}`}
+                onClick={() => cambiarNivel(clave)}
+              >
+                {n.emoji} {n.titulo}
+              </button>
+            ))}
+          </div>
+
+          <div className="du-chips">
+            {horarios.map((h, i) => (
+              <button
+                key={h.id_horario}
+                className={`du-chip ${activo?.id_horario === h.id_horario ? "du-chip--on" : ""}`}
+                style={{ "--c": COLORES[i % COLORES.length] }}
+                onClick={() => setIdSel(h.id_horario)}
+              >
+                {h.nombre} <span>{deHorario(h.id_horario).length}</span>
+              </button>
+            ))}
+          </div>
+
+          {activo && (
+            <section className="du-list" style={{ "--c": color }}>
+              <div className="du-list-head">
+                <h3>
+                  {activo.nombre} <span>{lista.length} estudiantes</span>
+                </h3>
+                <button className="du-btn du-btn--ghost" onClick={copiar} disabled={!lista.length}>
+                  <Copy size={16} /> Copiar lista
+                </button>
+              </div>
+
+              {grupos.length === 0 ? (
+                <p className="du-muted du-list-empty">Aún nadie inscrito en este horario.</p>
+              ) : (
+                grupos.map((g) => (
+                  <div key={g.curso.id} className="du-list-group">
+                    <h4>
+                      {g.curso.corto} {g.curso.label} <span>{g.estudiantes.length}</span>
+                    </h4>
+                    <ol>
+                      {g.estudiantes.map((e) => (
+                        <li key={e.id}>
+                          <span className="du-list-num">{++contador}</span>
+                          <span>
+                            {e.apellido} {e.nombre}
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                ))
+              )}
+            </section>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PorMateria = ({ datos, inscritos, onClose, onCopiado }) => {
+  const [nivelSel, setNivelSel] = useState("PRIMARIA");
+  const [materiaSel, setMateriaSel] = useState(null);
+
+  const horas = NIVELES[nivelSel].horas;
+  const cursos = NIVELES[nivelSel].cursos;
+  const horarios = (datos?.horarios || []).filter((h) => h.nivel === nivelSel);
+  const estudiantesNivel = (datos?.estudiantes || []).filter((e) => e.nivel === nivelSel);
+
+  // Junta cada materia con todas las veces que aparece (horario + hora)
+  const mapa = {};
+  horarios.forEach((h) => {
+    (h.bloques || []).forEach((b, i) => {
+      const c = parseClase(b);
+      if (!c.nombre) return;
+      if (!mapa[c.nombre]) mapa[c.nombre] = { ...c, sesiones: [] };
+      mapa[c.nombre].sesiones.push({ id_horario: h.id_horario, horario: h.nombre, hora: horas[i] || "" });
+    });
+  });
+  const materias = Object.values(mapa).sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+  const activa = materias.find((m) => m.nombre === materiaSel) || materias[0];
+  const idxActiva = Math.max(0, materias.indexOf(activa));
+  const color = COLORES[idxActiva % COLORES.length];
+
+  const alumnosDe = (mat) =>
+    estudiantesNivel.filter((e) => mat.sesiones.some((s) => s.id_horario === inscritos[e.id]?.id_horario));
+  const sesionDe = (e) => activa?.sesiones.find((s) => s.id_horario === inscritos[e.id]?.id_horario);
+  const cuantosEnSesion = (s) => estudiantesNivel.filter((e) => inscritos[e.id]?.id_horario === s.id_horario).length;
+
+  const lista = activa ? alumnosDe(activa) : [];
+  const grupos = cursos
+    .map((c) => ({
+      curso: c,
+      estudiantes: lista
+        .filter((e) => e.course === c.id)
+        .sort((a, b) => a.apellido.localeCompare(b.apellido) || a.nombre.localeCompare(b.nombre)),
+    }))
+    .filter((g) => g.estudiantes.length);
+
+  const cambiarNivel = (clave) => {
+    setNivelSel(clave);
+    setMateriaSel(null);
+  };
+
+  const copiar = async () => {
+    let n = 0;
+    const filas = [
+      `${activa?.nombre} – ${NIVELES[nivelSel].titulo}${activa?.docente ? ` – ${activa.docente}` : ""}`,
+      "N°\tCurso\tApellidos\tNombres\tHorario\tHora",
+      ...grupos.flatMap((g) =>
+        g.estudiantes.map((e) => {
+          const s = sesionDe(e);
+          return `${++n}\t${g.curso.label}\t${e.apellido}\t${e.nombre}\t${s?.horario ?? ""}\t${s?.hora ?? ""}`;
+        })
+      ),
+    ];
+    try {
+      await navigator.clipboard.writeText(filas.join("\n"));
+      onCopiado?.();
+    } catch {
+      window.prompt("Copia la lista:", filas.join("\n"));
+    }
+  };
+
+  let contador = 0;
+
+  return (
+    <div className="du-overlay" onClick={onClose}>
+      <div className="du-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Inscritos por materia">
+        <div className="du-modal-head">
+          <h2>Inscritos por materia</h2>
+          <button className="du-icon-btn" onClick={onClose} aria-label="Cerrar">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="du-modal-body du-modal-body--list">
+          <div className="du-tabs">
+            {Object.entries(NIVELES).map(([clave, n]) => (
+              <button
+                key={clave}
+                className={`du-tab ${nivelSel === clave ? "du-tab--on" : ""}`}
+                onClick={() => cambiarNivel(clave)}
+              >
+                {n.emoji} {n.titulo}
+              </button>
+            ))}
+          </div>
+
+          <div className="du-chips">
+            {materias.map((m, i) => (
+              <button
+                key={m.nombre}
+                className={`du-chip ${activa?.nombre === m.nombre ? "du-chip--on" : ""}`}
+                style={{ "--c": COLORES[i % COLORES.length] }}
+                onClick={() => setMateriaSel(m.nombre)}
+              >
+                {m.emoji} {m.nombre} <span>{alumnosDe(m).length}</span>
+              </button>
+            ))}
+          </div>
+
+          {activa && (
+            <section className="du-list" style={{ "--c": color }}>
+              <div className="du-list-head">
+                <div>
+                  <h3>
+                    {activa.emoji} {activa.nombre} <span>{lista.length} estudiantes</span>
+                  </h3>
+                  <p className="du-materia-info">
+                    {[activa.docente, activa.salon].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+                <button className="du-btn du-btn--ghost" onClick={copiar} disabled={!lista.length}>
+                  <Copy size={16} /> Copiar lista
+                </button>
+              </div>
+
+              <div className="du-sesiones">
+                {activa.sesiones.map((s) => (
+                  <span key={`${s.id_horario}-${s.hora}`} className="du-sesion">
+                    <strong>{s.horario}</strong> {s.hora} <em>{cuantosEnSesion(s)}</em>
+                  </span>
+                ))}
+              </div>
+
+              {grupos.length === 0 ? (
+                <p className="du-muted du-list-empty">Aún nadie inscrito en esta materia.</p>
+              ) : (
+                grupos.map((g) => (
+                  <div key={g.curso.id} className="du-list-group du-list-group--materia">
+                    <h4>
+                      {g.curso.corto} {g.curso.label} <span>{g.estudiantes.length}</span>
+                    </h4>
+                    <ol>
+                      {g.estudiantes.map((e) => {
+                        const s = sesionDe(e);
+                        return (
+                          <li key={e.id}>
+                            <span className="du-list-num">{++contador}</span>
+                            <span className="du-list-name">
+                              {e.apellido} {e.nombre}
+                            </span>
+                            <span className="du-list-tag">
+                              {s?.horario} · {s?.hora}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </div>
+                ))
+              )}
+            </section>
+          )}
         </div>
       </div>
     </div>

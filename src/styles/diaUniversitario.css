@@ -860,6 +860,227 @@
   font-size: 0.8rem;
 }
 
+/* ───────── Botón del home: inscritos por horario ───────── */
+.du-home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.du-btn--big {
+  padding: 16px 28px;
+  font-size: 1.1rem;
+  box-shadow: 0 6px 0 var(--sun);
+}
+
+.du-modal-body--list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.du-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.du-tab {
+  padding: 10px 18px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.du-tab--on {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff !important;
+}
+
+.du-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.du-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 2px solid var(--c);
+  border-radius: 999px;
+  background: var(--card);
+  font-weight: 600;
+}
+
+.du-chip span {
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--paper);
+  font-size: 0.85rem;
+}
+
+.du-chip--on {
+  background: var(--c);
+  color: #fff !important;
+}
+
+.du-chip--on span {
+  background: #fff;
+  color: var(--ink);
+}
+
+.du-list {
+  flex-shrink: 0;
+  border: 2px solid var(--c);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.du-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--c);
+  color: #fff;
+}
+
+.du-list-head h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.du-list-head h3 span {
+  margin-left: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.du-list-head .du-btn--ghost {
+  border-color: #fff;
+  background: #fff;
+  color: var(--ink) !important;
+  padding: 8px 14px;
+}
+
+.du-list-empty {
+  margin: 16px;
+}
+
+.du-list-group {
+  padding: 10px 16px 6px;
+  border-bottom: 1px dashed var(--line);
+}
+
+.du-list-group:last-child {
+  border-bottom: 0;
+}
+
+.du-list-group h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.du-list-group h4 span {
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--paper);
+  font-size: 0.8rem;
+}
+
+.du-list-group ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  columns: 2 220px;
+  column-gap: 24px;
+}
+
+.du-list-group li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  break-inside: avoid;
+}
+
+.du-list-num {
+  min-width: 28px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+/* ───────── Inscritos por materia ───────── */
+.du-materia-info {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.du-sesiones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px dashed var(--line);
+  background: var(--paper);
+}
+
+.du-sesion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 2px solid var(--c);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 0.85rem;
+}
+
+.du-sesion em {
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--c);
+  color: #fff;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.du-list-group--materia ol {
+  columns: 2 340px;
+}
+
+.du-list-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.du-list-tag {
+  flex-shrink: 0;
+  padding: 1px 8px;
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
 /* ───────── Responsive ───────── */
 @media (max-width: 820px) {
   .du-turn-layout {
